@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Ecommerce Comparison</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Ecommerce Price Comparison (Minimal)</h1>
+
+      <section class="controls">
+        <label>Enter product names (one per line):</label>
+        <textarea id="products" placeholder="SuperPhone X\nHeadphones Pro"></textarea>
+
+        <div class="stores">
+          <label>Select stores to compare:</label>
+          <div class="store-options">
+            {% for s in stores %}
+            <label><input type="checkbox" checked value="{{ s }}" class="store-checkbox" /> {{ s }}</label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <button id="compareBtn">Compare</button>
+      </section>
+
+      <section id="results">
+      </section>
+    </div>
+
+    <script>
+    async function postCompare(products, stores) {
+      const res = await fetch('/api/compare', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({products, stores})
+      });
+      return res.json();
+    }
+
+    function renderResults(data) {
+      const root = document.getElementById('results');
+      root.innerHTML = '';
+      data.results.forEach(r => {
+        const div = document.createElement('div');
+        div.className = 'result-item';
+        const title = document.createElement('h3');
+        title.textContent = r.query;
+        div.appendChild(title);
+
+        if (!r.matches.length) {
+          const p = document.createElement('p');
+          p.textContent = 'No matches found in the selected stores.';
+          div.appendChild(p);
+        } else {
+          const table = document.createElement('table');
+          table.innerHTML = '<thead><tr><th>Store</th><th>Product</th><th>Price</th><th>Link</th></tr></thead>';
+          const tbody = document.createElement('tbody');
+          r.matches.forEach(m => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${m.store}</td><td>${m.name}</td><td>$${m.price.toFixed(2)}</td><td><a href='${m.url}' target='_blank'>view</a></td>`;
+            if (r.best && m.store === r.best.store && m.price === r.best.price) {
+              tr.classList.add('best');
+            }
+            tbody.appendChild(tr);
+          })
+          table.appendChild(tbody);
+          div.appendChild(table);
+        }
+        root.appendChild(div);
+      })
+    }
+
+    document.getElementById('compareBtn').addEventListener('click', async () => {
+      const txt = document.getElementById('products').value.trim();
+      if (!txt) return alert('Please enter at least one product name.');
+      const products = txt.split('\n').map(s => s.trim()).filter(Boolean);
+      const stores = Array.from(document.querySelectorAll('.store-checkbox:checked')).map(i => i.value);
+      if (!stores.length) return alert('Select at least one store.');
+      const res = await postCompare(products, stores);
+      renderResults(res);
+    });
+    </script>
+  </body>
+</html>

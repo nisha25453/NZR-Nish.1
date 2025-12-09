@@ -1,0 +1,11 @@
+{
+  "name": "ecommerce-comparator",
+  "version": "1.0.0",
+  "description": "Minimal Node entry for ecommerce comparator (mock)",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
