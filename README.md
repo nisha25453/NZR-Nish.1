@@ -1,1 +1,1 @@
-# NZR-Nish.1
+# ecommerce-comparison-app
